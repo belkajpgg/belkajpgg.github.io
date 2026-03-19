@@ -1,1 +1,200 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5tarcry</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background: #000a15;
+  color: white;
+  font-family: 'Orbitron', sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+.stars { position: fixed; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
+.star { position: absolute; width: 2px; height: 2px; background: #4a7ab5; border-radius: 50%; animation: twinkle 3s infinite alternate; }
+@keyframes twinkle { 0%{opacity:0.2;transform:scale(0.5);} 100%{opacity:0.8;transform:scale(1.2);} }
+.cosmic-fog { position: fixed; top:0; left:0; width:100%; height:100%; background: radial-gradient(ellipse at 20% 50%, rgba(10,30,60,0.15), transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(5,15,40,0.1), transparent 50%); z-index:0; pointer-events:none; }
 
+header {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: 60px 20px 40px;
+}
+.site-title {
+  font-size: clamp(2.5rem, 6vw, 4.5rem);
+  letter-spacing: 8px;
+  text-shadow: 0 0 30px #1e3a5f, 0 0 60px #1e3a5f;
+  animation: neonPulse 3s ease-in-out infinite alternate;
+}
+@keyframes neonPulse { from{text-shadow:0 0 20px #1e3a5f;} to{text-shadow:0 0 50px #66b3ff, 0 0 80px #66b3ff;} }
+.site-sub {
+  font-size: 11px;
+  letter-spacing: 5px;
+  color: #1e5a8a;
+  margin-top: 8px;
+}
+
+.tracks-grid {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 20px 32px 80px;
+}
+
+.track-card {
+  background: #000e1f;
+  border: 1px solid #0d2a4a;
+  border-radius: 14px;
+  overflow: hidden;
+  cursor: pointer;
+  text-decoration: none;
+  color: white;
+  display: block;
+  transition: border-color 0.3s, transform 0.3s;
+  animation: fadeIn 0.5s ease both;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
+.track-card:hover { border-color: #2a6aaa; transform: translateY(-4px); }
+.track-card:hover .cover-glow { opacity: 0.7; }
+
+.cover-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #020d1a;
+}
+.cover-wrap img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.4s;
+}
+.track-card:hover .cover-wrap img { transform: scale(1.05); }
+.cover-glow {
+  position: absolute; inset: 0;
+  background: radial-gradient(circle at center, rgba(30,90,180,0.3), transparent 70%);
+  opacity: 0.4;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+.cover-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 48px;
+  color: #1e3a5f;
+}
+
+.card-info { padding: 14px 16px; }
+.card-title {
+  font-size: 12px;
+  letter-spacing: 2px;
+  color: #cce0ff;
+  margin-bottom: 6px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.card-date { font-size: 9px; letter-spacing: 2px; color: #1e5a8a; }
+
+.empty-state {
+  position: relative; z-index: 2;
+  text-align: center;
+  padding: 80px 20px;
+  color: #1e3a5f;
+  font-size: 13px;
+  letter-spacing: 3px;
+}
+
+canvas#bgCanvas {
+  position: fixed; top:0; left:0;
+  width:100%; height:100%;
+  pointer-events: none;
+  z-index: 1;
+}
+</style>
+</head>
+<body>
+
+<canvas id="bgCanvas"></canvas>
+<div class="stars" id="stars"></div>
+<div class="cosmic-fog"></div>
+
+<header>
+  <h1 class="site-title">5TARCRY</h1>
+  <p class="site-sub">DISCOGRAPHY</p>
+</header>
+
+<div class="tracks-grid" id="tracksGrid"></div>
+
+<script src="tracks.js"></script>
+<script>
+// Звёзды
+const starsEl = document.getElementById('stars');
+for(let i = 0; i < 120; i++){
+  const s = document.createElement('div');
+  s.className = 'star';
+  s.style.top = Math.random()*100+'%';
+  s.style.left = Math.random()*100+'%';
+  s.style.animationDuration = (Math.random()*3+2)+'s';
+  s.style.animationDelay = (Math.random()*3)+'s';
+  starsEl.appendChild(s);
+}
+
+// Mouse trail
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+window.addEventListener('resize', ()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; });
+const particles = [];
+document.addEventListener('mousemove', e=>{
+  for(let i=0;i<3;i++) particles.push({x:e.clientX,y:e.clientY,size:Math.random()*2+0.5,opacity:0.5,vx:(Math.random()-0.5)*2,vy:(Math.random()-0.5)*2});
+});
+(function animBg(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let i=particles.length-1;i>=0;i--){
+    const p=particles[i];
+    p.x+=p.vx; p.y+=p.vy; p.opacity-=0.015; p.size*=0.97;
+    if(p.opacity<=0){particles.splice(i,1);continue;}
+    ctx.fillStyle=`rgba(102,179,255,${p.opacity})`;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+  }
+  requestAnimationFrame(animBg);
+})();
+
+// Рендер треков
+const grid = document.getElementById('tracksGrid');
+if(typeof TRACKS !== 'undefined' && TRACKS.length > 0){
+  TRACKS.forEach((track, i) => {
+    const a = document.createElement('a');
+    a.className = 'track-card';
+    a.href = `track.html?id=${track.id}`;
+    a.style.animationDelay = (i * 0.08) + 's';
+    a.innerHTML = `
+      <div class="cover-wrap">
+        ${track.cover
+          ? `<img src="${track.cover}" alt="${track.title}" loading="lazy">`
+          : `<div class="cover-placeholder">◈</div>`}
+        <div class="cover-glow"></div>
+      </div>
+      <div class="card-info">
+        <div class="card-title">${track.title}</div>
+        <div class="card-date">${track.date || ''}</div>
+      </div>`;
+    grid.appendChild(a);
+  });
+} else {
+  grid.innerHTML = `<div class="empty-state">NO TRACKS YET</div>`;
+}
+</script>
+</body>
+</html>

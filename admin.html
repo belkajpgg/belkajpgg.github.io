@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — 5tarcry</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:#000a15; color:white; font-family:'Orbitron',sans-serif; min-height:100vh; }
+
+/* ===== AUTH ===== */
+#authScreen {
+  position:fixed; inset:0;
+  background:#000a15;
+  display:flex; align-items:center; justify-content:center;
+  flex-direction:column; gap:20px; z-index:100;
+}
+#authScreen h1 { font-size:24px; letter-spacing:4px; text-shadow:0 0 20px #1e3a5f; }
+#authScreen input {
+  background:#000e1f; border:1px solid #0d2a4a;
+  color:white; padding:12px 20px;
+  border-radius:30px; font-family:'Orbitron',sans-serif;
+  font-size:14px; outline:none; text-align:center;
+  letter-spacing:4px; width:260px;
+}
+#authScreen input:focus { border-color:#2a6aaa; }
+#authScreen button {
+  background:#001022; color:#1e5a8a;
+  border:1px solid #0d2a4a; padding:12px 40px;
+  border-radius:30px; cursor:pointer;
+  font-family:'Orbitron',sans-serif; font-size:13px;
+  letter-spacing:2px; transition:0.3s;
+}
+#authScreen button:hover { color:#66b3ff; border-color:#66b3ff; }
+#authError { color:#ff4466; font-size:10px; letter-spacing:2px; min-height:16px; }
+
+/* ===== MAIN ===== */
+#app { display:none; }
+.header {
+  text-align:center; padding:40px 20px 30px;
+  border-bottom:1px solid #0d2a4a;
+}
+.header h1 { font-size:20px; letter-spacing:5px; text-shadow:0 0 20px #1e3a5f; }
+.header p { font-size:9px; color:#1e5a8a; letter-spacing:3px; margin-top:6px; }
+
+.container { max-width:900px; margin:0 auto; padding:30px 24px; }
+
+/* ===== TRACKS LIST ===== */
+.section-title {
+  font-size:10px; letter-spacing:4px; color:#1e5a8a;
+  margin-bottom:16px; padding-bottom:8px;
+  border-bottom:1px solid #0d2a4a;
+}
+.tracks-list { margin-bottom:40px; }
+.track-item {
+  display:flex; align-items:center; gap:16px;
+  background:#000e1f; border:1px solid #0d2a4a;
+  border-radius:12px; padding:14px 18px;
+  margin-bottom:10px;
+}
+.track-thumb {
+  width:44px; height:44px; border-radius:8px;
+  object-fit:cover; background:#020d1a;
+  flex-shrink:0; display:flex; align-items:center; justify-content:center;
+  color:#1e3a5f; font-size:18px;
+}
+.track-thumb img { width:44px; height:44px; border-radius:8px; object-fit:cover; }
+.track-meta { flex:1; }
+.track-meta strong { font-size:11px; letter-spacing:2px; display:block; margin-bottom:3px; }
+.track-meta span { font-size:9px; color:#1e5a8a; letter-spacing:1px; }
+.btn-del {
+  background:none; border:1px solid #2a0a0a; color:#661122;
+  padding:6px 14px; border-radius:20px; cursor:pointer;
+  font-family:'Orbitron',sans-serif; font-size:9px; letter-spacing:1px;
+  transition:0.3s; flex-shrink:0;
+}
+.btn-del:hover { border-color:#ff4466; color:#ff4466; }
+
+.empty-msg { color:#1e3a5f; font-size:10px; letter-spacing:3px; padding:20px 0; }
+
+/* ===== FORM ===== */
+.form-card {
+  background:#000e1f; border:1px solid #0d2a4a;
+  border-radius:16px; padding:28px;
+}
+.form-row { margin-bottom:20px; }
+.form-row label {
+  display:block; font-size:9px; letter-spacing:3px;
+  color:#1e5a8a; margin-bottom:8px;
+}
+.form-row input[type=text], .form-row input[type=date] {
+  width:100%; background:#020d1a; border:1px solid #0d2a4a;
+  color:white; padding:10px 16px; border-radius:10px;
+  font-family:'Orbitron',sans-serif; font-size:12px;
+  outline:none; transition:0.3s;
+}
+.form-row input:focus { border-color:#2a6aaa; }
+.form-row input::placeholder { color:#0d2a4a; }
+
+.cover-upload-area {
+  border:2px dashed #0d2a4a; border-radius:12px;
+  padding:24px; text-align:center; cursor:pointer;
+  transition:0.3s; position:relative;
+}
+.cover-upload-area:hover { border-color:#2a6aaa; }
+.cover-upload-area input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+.cover-upload-area p { font-size:10px; color:#1e5a8a; letter-spacing:2px; }
+#coverPreview {
+  width:120px; height:120px; border-radius:10px;
+  object-fit:cover; display:none; margin:0 auto 12px;
+}
+
+.links-grid {
+  display:grid; grid-template-columns:1fr 1fr;
+  gap:12px;
+}
+@media(max-width:600px){ .links-grid { grid-template-columns:1fr; } }
+
+.btn-add {
+  width:100%; padding:14px;
+  background:#001022; color:#1e5a8a;
+  border:1px solid #0d2a4a; border-radius:30px;
+  font-family:'Orbitron',sans-serif; font-size:12px;
+  letter-spacing:3px; cursor:pointer; transition:0.3s;
+  margin-top:8px;
+}
+.btn-add:hover { color:#66b3ff; border-color:#66b3ff; }
+
+/* ===== OUTPUT ===== */
+#outputSection { display:none; margin-top:30px; }
+.output-card {
+  background:#000e1f; border:1px solid #0d3a0a;
+  border-radius:16px; padding:24px;
+}
+.output-card h3 { font-size:10px; letter-spacing:3px; color:#1a6a1a; margin-bottom:16px; }
+.output-steps { margin-bottom:20px; }
+.output-steps p {
+  font-size:10px; color:#aaaaaa; letter-spacing:1px;
+  margin-bottom:8px; padding-left:4px;
+  border-left:2px solid #1a6a1a; padding-left:12px;
+}
+#generatedCode {
+  background:#020d1a; border:1px solid #0d2a0a;
+  border-radius:10px; padding:16px;
+  font-family:monospace; font-size:11px;
+  color:#66ff88; white-space:pre; overflow-x:auto;
+  max-height:260px; overflow-y:auto; margin-bottom:12px;
+  line-height:1.5;
+}
+.btn-copy {
+  background:#001a00; color:#1a8a1a;
+  border:1px solid #0d3a0a; padding:10px 28px;
+  border-radius:20px; cursor:pointer;
+  font-family:'Orbitron',sans-serif; font-size:10px;
+  letter-spacing:2px; transition:0.3s;
+}
+.btn-copy:hover { color:#66ff88; border-color:#66ff88; }
+
+.toast {
+  position:fixed; bottom:30px; left:50%; transform:translateX(-50%);
+  background:#001a00; border:1px solid #1a6a1a; color:#66ff88;
+  padding:12px 28px; border-radius:30px;
+  font-size:10px; letter-spacing:2px;
+  opacity:0; transition:opacity 0.3s; pointer-events:none;
+  z-index:200;
+}
+.toast.show { opacity:1; }
+</style>
+</head>
+<body>
+
+<!-- AUTH -->
+<div id="authScreen">
+  <h1>5TARCRY ADMIN</h1>
+  <input type="password" id="passwordInput" placeholder="PASSWORD" autocomplete="off">
+  <button onclick="checkPassword()">ENTER</button>
+  <div id="authError"></div>
+</div>
+
+<div id="app">
+  <div class="header">
+    <h1>ADMIN PANEL</h1>
+    <p>5TARCRY — TRACK MANAGER</p>
+  </div>
+
+  <div class="container">
+    <!-- Список треков -->
+    <div class="tracks-list">
+      <div class="section-title">CURRENT TRACKS</div>
+      <div id="tracksList"></div>
+    </div>
+
+    <!-- Форма добавления -->
+    <div class="section-title">ADD NEW TRACK</div>
+    <div class="form-card">
+      <div class="form-row">
+        <label>TRACK ID (латиницей без пробелов, напр: my-track)</label>
+        <input type="text" id="fId" placeholder="my-new-track">
+      </div>
+      <div class="form-row">
+        <label>НАЗВАНИЕ</label>
+        <input type="text" id="fTitle" placeholder="TRACK NAME">
+      </div>
+      <div class="form-row">
+        <label>ДАТА ВЫХОДА (отображается на карточке)</label>
+        <input type="text" id="fDate" placeholder="01 JAN 2026">
+      </div>
+      <div class="form-row">
+        <label>ОБЛОЖКА</label>
+        <div class="cover-upload-area" id="uploadArea">
+          <input type="file" id="fCover" accept="image/*" onchange="previewCover(this)">
+          <img id="coverPreview" src="">
+          <p id="uploadText">НАЖМИ ИЛИ ПЕРЕТАЩИ ОБЛОЖКУ</p>
+        </div>
+        <p style="font-size:9px;color:#1e3a5f;margin-top:8px;letter-spacing:1px;">
+          После сохранения положи файл в папку <b style="color:#2a6aaa">covers/</b> с тем же именем что введёшь ниже
+        </p>
+        <input type="text" id="fCoverPath" placeholder="covers/my-track.png" style="margin-top:8px;">
+      </div>
+
+      <div class="form-row">
+        <label>ССЫЛКИ НА ПЛАТФОРМЫ (оставь пустым если нет)</label>
+        <div class="links-grid">
+          <input type="text" id="lSpotify" placeholder="Spotify URL">
+          <input type="text" id="lApple" placeholder="Apple Music URL">
+          <input type="text" id="lSoundcloud" placeholder="SoundCloud URL">
+          <input type="text" id="lYoutubeMusic" placeholder="YouTube Music URL">
+          <input type="text" id="lYoutube" placeholder="YouTube URL">
+          <input type="text" id="lYandex" placeholder="Yandex Music URL">
+          <input type="text" id="lTidal" placeholder="Tidal URL">
+          <input type="text" id="lDeezer" placeholder="Deezer URL">
+        </div>
+      </div>
+
+      <button class="btn-add" onclick="addTrack()">+ ДОБАВИТЬ ТРЕК</button>
+    </div>
+
+    <!-- Output -->
+    <div id="outputSection">
+      <div class="output-card">
+        <h3>✓ ГОТОВО — ОБНОВИ САЙТ</h3>
+        <div class="output-steps">
+          <p>1. Скопируй код ниже</p>
+          <p>2. Замени содержимое файла <b>tracks.js</b> в репозитории на GitHub</p>
+          <p>3. Положи обложку в папку <b>covers/</b></p>
+          <p>4. Сохрани — сайт обновится автоматически</p>
+        </div>
+        <div id="generatedCode"></div>
+        <button class="btn-copy" onclick="copyCode()">СКОПИРОВАТЬ КОД</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast">СКОПИРОВАНО!</div>
+
+<script>
+// ===== ПАРОЛЬ =====
+// Смени на свой пароль:
+const ADMIN_PASSWORD = "5tarcry2026";
+
+function checkPassword(){
+  const val = document.getElementById('passwordInput').value;
+  if(val === ADMIN_PASSWORD){
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('app').style.display = 'block';
+    loadTracks();
+  } else {
+    document.getElementById('authError').textContent = 'НЕВЕРНЫЙ ПАРОЛЬ';
+    setTimeout(()=>document.getElementById('authError').textContent='', 2000);
+  }
+}
+document.getElementById('passwordInput').addEventListener('keydown', e=>{ if(e.key==='Enter') checkPassword(); });
+
+// ===== ДАННЫЕ =====
+// Загружаем из localStorage (локальная копия для удобства редактирования)
+let tracks = JSON.parse(localStorage.getItem('5tarcry_tracks') || '[]');
+
+function saveTracks(){ localStorage.setItem('5tarcry_tracks', JSON.stringify(tracks)); }
+
+function loadTracks(){
+  const list = document.getElementById('tracksList');
+  if(tracks.length === 0){
+    list.innerHTML = '<div class="empty-msg">НЕТ ТРЕКОВ</div>';
+    return;
+  }
+  list.innerHTML = tracks.map((t,i) => `
+    <div class="track-item">
+      <div class="track-thumb">
+        ${t.cover ? `<img src="${t.cover}" onerror="this.style.display='none'">` : '◈'}
+      </div>
+      <div class="track-meta">
+        <strong>${t.title}</strong>
+        <span>${t.date || ''} · ${t.id}</span>
+      </div>
+      <button class="btn-del" onclick="deleteTrack(${i})">УДАЛИТЬ</button>
+    </div>
+  `).join('');
+  generateCode();
+  document.getElementById('outputSection').style.display = 'block';
+}
+
+function addTrack(){
+  const id = document.getElementById('fId').value.trim();
+  const title = document.getElementById('fTitle').value.trim();
+  const date = document.getElementById('fDate').value.trim();
+  const coverPath = document.getElementById('fCoverPath').value.trim();
+
+  if(!id || !title){ alert('Заполни ID и название!'); return; }
+  if(tracks.find(t=>t.id===id)){ alert('Трек с таким ID уже есть!'); return; }
+
+  const links = {};
+  const lMap = {
+    spotify: 'lSpotify', appleMusic: 'lApple', soundcloud: 'lSoundcloud',
+    youtubeMusic: 'lYoutubeMusic', youtube: 'lYoutube',
+    yandex: 'lYandex', tidal: 'lTidal', deezer: 'lDeezer'
+  };
+  Object.entries(lMap).forEach(([key, elId])=>{
+    const v = document.getElementById(elId).value.trim();
+    if(v) links[key] = v;
+  });
+
+  tracks.unshift({ id, title, date, cover: coverPath || '', links });
+  saveTracks();
+  loadTracks();
+  clearForm();
+  showToast('ТРЕК ДОБАВЛЕН!');
+}
+
+function deleteTrack(i){
+  if(!confirm(`Удалить "${tracks[i].title}"?`)) return;
+  tracks.splice(i, 1);
+  saveTracks();
+  loadTracks();
+  showToast('УДАЛЕНО');
+}
+
+function clearForm(){
+  ['fId','fTitle','fDate','fCoverPath','lSpotify','lApple','lSoundcloud','lYoutubeMusic','lYoutube','lYandex','lTidal','lDeezer'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('coverPreview').style.display='none';
+  document.getElementById('uploadText').style.display='block';
+}
+
+// ===== ГЕНЕРАЦИЯ tracks.js =====
+function generateCode(){
+  const json = JSON.stringify(tracks, null, 2);
+  const code = `const TRACKS = ${json};`;
+  document.getElementById('generatedCode').textContent = code;
+}
+
+function copyCode(){
+  const code = document.getElementById('generatedCode').textContent;
+  navigator.clipboard.writeText(code).then(()=>showToast('СКОПИРОВАНО!'));
+}
+
+// ===== PREVIEW ОБЛОЖКИ =====
+function previewCover(input){
+  const file = input.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    const preview = document.getElementById('coverPreview');
+    preview.src = e.target.result;
+    preview.style.display = 'block';
+    document.getElementById('uploadText').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+  // Авто-заполняем путь по имени файла
+  const name = file.name;
+  document.getElementById('fCoverPath').value = `covers/${name}`;
+  if(!document.getElementById('fId').value){
+    document.getElementById('fId').value = name.replace(/\.[^.]+$/,'').toLowerCase().replace(/\s+/g,'-');
+  }
+}
+
+// ===== TOAST =====
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+</script>
+</body>
+</html>

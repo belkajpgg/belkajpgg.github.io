@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>5tarcry</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
+<style>
+* { margin:0; padding:0; box-sizing:border-box; }
+body {
+  background:#000a15;
+  color:white;
+  font-family:'Orbitron', sans-serif;
+  overflow:hidden;
+  height:100vh;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+  cursor:pointer;
+}
+.stars { position:fixed; width:100%; height:100%; z-index:0; overflow:hidden; }
+.star { position:absolute; width:2px; height:2px; background:#0f1f3a; border-radius:50%; opacity:0.6; animation: twinkle 3s infinite alternate; }
+@keyframes twinkle { 0%{opacity:0.3;transform:scale(0.5);} 100%{opacity:0.9;transform:scale(1.2);} }
+.cosmic-fog { position:fixed; top:0; left:0; width:100%; height:100%; background: radial-gradient(circle at 30% 30%, rgba(10,20,40,0.05), transparent 70%); z-index:0; pointer-events:none; }
+
+.back-btn {
+  position: fixed;
+  top: 24px; left: 24px;
+  z-index: 20;
+  color: #1e5a8a;
+  text-decoration: none;
+  font-size: 10px;
+  letter-spacing: 3px;
+  border: 1px solid #0d2a4a;
+  padding: 8px 16px;
+  border-radius: 30px;
+  transition: 0.3s;
+}
+.back-btn:hover { color: #66b3ff; border-color: #66b3ff; }
+
+.content { text-align:center; z-index:1; position:relative; }
+.cover-container { position:relative; display:inline-block; margin-bottom: 20px; }
+.cover {
+  width:320px; border-radius:20px;
+  box-shadow:0 0 60px rgba(0,50,120,0.4);
+  animation: slowFloat 35s ease-in-out infinite alternate, coverPulse 4s ease-in-out infinite alternate;
+  position:relative; z-index:2;
+}
+.cover-placeholder {
+  width: 320px; height: 320px;
+  border-radius: 20px;
+  background: #020d1a;
+  border: 1px solid #0d2a4a;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 80px; color: #1e3a5f;
+  animation: slowFloat 35s ease-in-out infinite alternate;
+}
+@keyframes slowFloat { 0%{transform:translateY(-3px);} 100%{transform:translateY(3px);} }
+@keyframes coverPulse { 0%{transform:scale(1);} 100%{transform:scale(1.01);} }
+
+.cover-container::after {
+  content:'';
+  position:absolute;
+  width:130%; height:130%;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  background:radial-gradient(circle, rgba(30,90,180,0.25), transparent 70%);
+  filter:blur(60px);
+  z-index:-1;
+  opacity:0.6;
+  animation:coverGlow 6s ease-in-out infinite alternate;
+}
+@keyframes coverGlow { from{opacity:0.4;} to{opacity:0.7;} }
+
+.orbit-circle { position:absolute; border:1px solid #1e3a5f; border-radius:50%; opacity:0.15; width:100%; height:100%; top:0; left:0; pointer-events:none; }
+.particle-orbit { position:absolute; width:4px; height:4px; background:#0f1f3a; border-radius:50%; opacity:0.5; filter: drop-shadow(0 0 5px #1e3a5f); }
+
+h1 { font-size:clamp(1.8rem,4vw,3rem); margin-bottom:8px; letter-spacing:3px; text-shadow:0 0 30px #1e3a5f; animation: neonPulse 2s ease-in-out infinite alternate; }
+h3 { font-size:clamp(1rem,2vw,1.5rem); margin-bottom:20px; color: #aac8e0; text-shadow:0 0 20px #1e3a5f; animation: neonPulse 2s ease-in-out infinite alternate-reverse; }
+@keyframes neonPulse { from{text-shadow:0 0 15px #1e3a5f;} to{text-shadow:0 0 40px #66b3ff;} }
+
+button {
+  margin-top:20px; padding:14px 48px;
+  background:#001022; color:#1e3a5f;
+  border:1px solid #0d2a4a;
+  font-size:16px; font-family:'Orbitron',sans-serif;
+  border-radius:50px; cursor:pointer;
+  letter-spacing:2px;
+  transition:0.4s;
+}
+button:hover { background:#001144; color:#66b3ff; border-color:#66b3ff; transform:scale(1.05); }
+
+#listenPanel {
+  position:absolute;
+  background:#001022;
+  border: 1px solid #0d2a4a;
+  padding:16px 20px;
+  border-radius:20px;
+  display:flex; gap:10px; flex-wrap:wrap; justify-content:center;
+  opacity:0; transform:scale(0.8);
+  transition:all 0.4s ease;
+  pointer-events:none; z-index:15;
+}
+.platformBtn {
+  color:white; padding:8px 14px;
+  border-radius:10px;
+  text-decoration:none;
+  display:flex; align-items:center; gap:6px;
+  transition:0.3s; font-size:0.9em;
+  font-family:'Orbitron',sans-serif;
+}
+.platformBtn:hover { transform:scale(1.05); box-shadow:0 0 15px rgba(102,179,255,0.4); }
+.platformBtn img { width:18px; height:18px; }
+
+canvas#mouseCanvas { position:fixed; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:10; }
+
+#countdown { font-size:1.8em; margin-top:16px; text-shadow:0 0 30px #1e3a5f; animation: neonPulse 2s ease-in-out infinite alternate; }
+</style>
+</head>
+<body>
+
+<a href="index.html" class="back-btn">← BACK</a>
+<canvas id="mouseCanvas"></canvas>
+<div class="stars" id="stars"></div>
+<div class="cosmic-fog"></div>
+
+<div class="content">
+  <h1 id="title">...</h1>
+  <h3>5tarcry</h3>
+  <div class="cover-container" id="coverContainer">
+    <div id="coverEl"></div>
+    <div class="orbit-circle"></div>
+  </div>
+  <div id="countdown"></div>
+  <button id="listenBtn">LISTEN NOW</button>
+</div>
+
+<div id="listenPanel"></div>
+
+<script src="tracks.js"></script>
+<script>
+// Получаем ID из URL
+const params = new URLSearchParams(window.location.search);
+const trackId = params.get('id');
+const track = (typeof TRACKS !== 'undefined') ? TRACKS.find(t => t.id === trackId) : null;
+
+if(!track){
+  document.getElementById('title').textContent = 'NOT FOUND';
+} else {
+  document.title = `${track.title} — 5tarcry`;
+  document.getElementById('title').textContent = track.title;
+
+  // Обложка
+  const coverEl = document.getElementById('coverEl');
+  if(track.cover){
+    coverEl.innerHTML = `<img src="${track.cover}" alt="${track.title}" class="cover" id="coverImg">`;
+  } else {
+    coverEl.innerHTML = `<div class="cover-placeholder">◈</div>`;
+  }
+
+  // Дата / отсчёт
+  const countdownEl = document.getElementById('countdown');
+  if(track.releaseTimestamp){
+    const releaseDate = new Date(track.releaseTimestamp).getTime();
+    function updateCountdown(){
+      const now = Date.now();
+      const dist = releaseDate - now;
+      if(dist < 0){ countdownEl.innerHTML = '🚀 RELEASED!'; clearInterval(interval); return; }
+      const d=Math.floor(dist/(1000*60*60*24));
+      const h=Math.floor((dist%(1000*60*60*24))/(1000*60*60));
+      const m=Math.floor((dist%(1000*60*60))/(1000*60));
+      const s=Math.floor((dist%(1000*60))/1000);
+      countdownEl.innerHTML = `${d}d ${h}h ${m}m ${s}s`;
+    }
+    const interval = setInterval(updateCountdown, 1000);
+    updateCountdown();
+  } else {
+    countdownEl.innerHTML = '🚀 RELEASED!';
+  }
+
+  // Кнопки платформ
+  const platformIcons = {
+    spotify: { label:'Spotify', icon:'spotify.png' },
+    appleMusic: { label:'Apple Music', icon:'apple.png' },
+    soundcloud: { label:'SoundCloud', icon:'soundcloud.png' },
+    youtubeMusic: { label:'YouTube Music', icon:'youtubemusic.png' },
+    youtube: { label:'YouTube', icon:'youtube.png' },
+    yandex: { label:'Yandex Music', icon:'yandex.png' },
+    tidal: { label:'Tidal', icon:'tidal.png' },
+    deezer: { label:'Deezer', icon:'deezer.png' }
+  };
+  const panel = document.getElementById('listenPanel');
+  if(track.links){
+    Object.entries(track.links).forEach(([key, url])=>{
+      if(!url) return;
+      const info = platformIcons[key] || { label: key, icon: '' };
+      const a = document.createElement('a');
+      a.className = 'platformBtn';
+      a.href = url;
+      a.target = '_blank';
+      a.rel = 'noopener noreferrer';
+      a.innerHTML = `${info.icon ? `<img src="${info.icon}">` : ''} ${info.label}`;
+      panel.appendChild(a);
+    });
+  }
+}
+
+// Звёзды
+const starsEl = document.getElementById('stars');
+for(let i=0;i<120;i++){
+  const s=document.createElement('div'); s.className='star';
+  s.style.top=Math.random()*100+'%'; s.style.left=Math.random()*100+'%';
+  s.style.animationDuration=(Math.random()*3+2)+'s';
+  starsEl.appendChild(s);
+}
+
+// Частицы орбиты
+const coverContainer = document.getElementById('coverContainer');
+const particles = [];
+for(let i=0;i<16;i++){
+  const p=document.createElement('div'); p.className='particle-orbit';
+  p.dataset.radius = 60+Math.random()*40;
+  p.dataset.speed = 0.002+Math.random()*0.0015;
+  p.dataset.angle = Math.random()*Math.PI*2;
+  coverContainer.appendChild(p);
+  particles.push(p);
+}
+let lastTime=performance.now();
+let mouseX=window.innerWidth/2, mouseY=window.innerHeight/2;
+document.addEventListener('mousemove', e=>{ mouseX=e.clientX; mouseY=e.clientY; });
+function animParticles(time){
+  const dt=time-lastTime; lastTime=time;
+  particles.forEach(p=>{
+    let angle=parseFloat(p.dataset.angle)+parseFloat(p.dataset.speed)*dt;
+    p.dataset.angle=angle;
+    const r=parseFloat(p.dataset.radius);
+    const rect=coverContainer.getBoundingClientRect();
+    const cx=rect.left+rect.width/2, cy=rect.top+rect.height/2;
+    const dx=mouseX-(cx+r*Math.cos(angle)), dy=mouseY-(cy+r*Math.sin(angle));
+    const dist=Math.sqrt(dx*dx+dy*dy);
+    const inf=Math.min(30/dist,0.5);
+    p.style.transform=`translate(${r*Math.cos(angle)-dx*inf}px, ${r*Math.sin(angle)-dy*inf}px)`;
+  });
+  requestAnimationFrame(animParticles);
+}
+requestAnimationFrame(animParticles);
+
+// Mouse canvas
+const canvas=document.getElementById('mouseCanvas');
+const ctx=canvas.getContext('2d');
+canvas.width=window.innerWidth; canvas.height=window.innerHeight;
+window.addEventListener('resize',()=>{canvas.width=window.innerWidth;canvas.height=window.innerHeight;});
+const mParticles=[];
+document.addEventListener('mousemove',e=>{
+  for(let i=0;i<3;i++) mParticles.push({x:e.clientX,y:e.clientY,size:Math.random()*2+0.5,opacity:0.5,vx:(Math.random()-0.5)*2,vy:(Math.random()-0.5)*2});
+});
+(function animCanvas(){
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  for(let i=mParticles.length-1;i>=0;i--){
+    const p=mParticles[i]; p.x+=p.vx; p.y+=p.vy; p.opacity-=0.015; p.size*=0.97;
+    if(p.opacity<=0){mParticles.splice(i,1);continue;}
+    ctx.fillStyle=`rgba(102,179,255,${p.opacity})`;
+    ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+  }
+  requestAnimationFrame(animCanvas);
+})();
+
+// Listen Now панель
+const listenBtn=document.getElementById('listenBtn');
+const listenPanel=document.getElementById('listenPanel');
+listenBtn.addEventListener('click',e=>{
+  const rect=listenBtn.getBoundingClientRect();
+  listenPanel.style.top=(rect.top-120)+'px';
+  listenPanel.style.left=(rect.left+rect.width/2-listenPanel.offsetWidth/2)+'px';
+  listenPanel.style.opacity=1;
+  listenPanel.style.transform='scale(1)';
+  listenPanel.style.pointerEvents='auto';
+});
+document.addEventListener('click',e=>{
+  if(!listenPanel.contains(e.target)&&e.target!==listenBtn){
+    listenPanel.style.opacity=0;
+    listenPanel.style.transform='scale(0.8)';
+    listenPanel.style.pointerEvents='none';
+  }
+});
+</script>
+</body>
+</html>
