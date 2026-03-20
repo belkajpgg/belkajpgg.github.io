@@ -14,34 +14,80 @@ body {
   min-height: 100vh;
   overflow-x: hidden;
 }
+
+/* ── STARS ── */
 .stars { position: fixed; width: 100%; height: 100%; z-index: 0; pointer-events: none; }
 .star { position: absolute; width: 2px; height: 2px; background: #4a7ab5; border-radius: 50%; animation: twinkle 3s infinite alternate; }
 @keyframes twinkle { 0%{opacity:0.2;transform:scale(0.5);} 100%{opacity:0.8;transform:scale(1.2);} }
-.cosmic-fog { position: fixed; top:0; left:0; width:100%; height:100%; background: radial-gradient(ellipse at 20% 50%, rgba(10,30,60,0.15), transparent 60%), radial-gradient(ellipse at 80% 20%, rgba(5,15,40,0.1), transparent 50%); z-index:0; pointer-events:none; }
 
-header {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  padding: 60px 20px 40px;
+/* ── NEBULA ── */
+.nebula {
+  position: fixed; top:0; left:0; width:100%; height:100%;
+  z-index: 0; pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 60%, rgba(20,50,120,0.18), transparent 70%),
+    radial-gradient(ellipse 50% 60% at 85% 20%, rgba(60,10,100,0.14), transparent 70%),
+    radial-gradient(ellipse 40% 50% at 50% 90%, rgba(0,80,100,0.12), transparent 70%),
+    radial-gradient(ellipse 70% 30% at 70% 50%, rgba(10,20,80,0.1), transparent 70%);
+  animation: nebulaShift 30s ease-in-out infinite alternate;
 }
+@keyframes nebulaShift {
+  0%   { opacity:0.7; transform:scale(1) rotate(0deg); }
+  50%  { opacity:1;   transform:scale(1.05) rotate(1deg); }
+  100% { opacity:0.7; transform:scale(1) rotate(-1deg); }
+}
+
+/* ── CANVAS (meteors + mouse trail) ── */
+canvas#bgCanvas {
+  position: fixed; top:0; left:0;
+  width:100%; height:100%;
+  pointer-events: none; z-index: 1;
+}
+
+/* ── HEADER ── */
+header { position: relative; z-index: 2; text-align: center; padding: 60px 20px 40px; }
 .site-title {
   font-size: clamp(2.5rem, 6vw, 4.5rem);
   letter-spacing: 8px;
-  text-shadow: 0 0 30px #1e3a5f, 0 0 60px #1e3a5f;
   animation: neonPulse 3s ease-in-out infinite alternate;
+  position: relative; display: inline-block;
 }
 @keyframes neonPulse { from{text-shadow:0 0 20px #1e3a5f;} to{text-shadow:0 0 50px #66b3ff, 0 0 80px #66b3ff;} }
-.site-sub {
-  font-size: 11px;
-  letter-spacing: 5px;
-  color: #1e5a8a;
-  margin-top: 8px;
+.site-sub { font-size: 11px; letter-spacing: 5px; color: #1e5a8a; margin-top: 8px; }
+
+/* ── GLITCH ── */
+.glitch { position: relative; }
+.glitch::before, .glitch::after {
+  content: attr(data-text);
+  position: absolute; top:0; left:0; width:100%; height:100%;
+  opacity: 0;
+}
+.glitch::before {
+  color: #66b3ff; clip-path: polygon(0 0,100% 0,100% 35%,0 35%);
+  animation: glitchTop 4s infinite; transform: translateX(-2px);
+}
+.glitch::after {
+  color: #ff4488; clip-path: polygon(0 65%,100% 65%,100% 100%,0 100%);
+  animation: glitchBot 4s infinite; transform: translateX(2px);
+}
+@keyframes glitchTop {
+  0%,90%,100%{opacity:0; transform:translateX(-2px);}
+  91%{opacity:0.8; transform:translateX(3px);}
+  92%{opacity:0; transform:translateX(-3px);}
+  93%{opacity:0.6; transform:translateX(2px);}
+  94%{opacity:0;}
+}
+@keyframes glitchBot {
+  0%,90%,100%{opacity:0; transform:translateX(2px);}
+  91%{opacity:0.7; transform:translateX(-3px);}
+  92%{opacity:0; transform:translateX(3px);}
+  93%{opacity:0.5; transform:translateX(-2px);}
+  94%{opacity:0;}
 }
 
+/* ── GRID ── */
 .tracks-grid {
-  position: relative;
-  z-index: 2;
+  position: relative; z-index: 2;
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 24px;
@@ -50,6 +96,7 @@ header {
   padding: 20px 32px 80px;
 }
 
+/* ── CARD ── */
 .track-card {
   background: #000e1f;
   border: 1px solid #0d2a4a;
@@ -59,122 +106,137 @@ header {
   text-decoration: none;
   color: white;
   display: block;
-  transition: border-color 0.3s, transform 0.3s;
-  animation: fadeIn 0.5s ease both;
+  opacity: 0;
+  transform: translateY(30px);
+  transition: border-color 0.3s, transform 0.3s, box-shadow 0.3s;
 }
-@keyframes fadeIn { from{opacity:0;transform:translateY(20px);} to{opacity:1;transform:translateY(0);} }
-.track-card:hover { border-color: #2a6aaa; transform: translateY(-4px); }
-.track-card:hover .cover-glow { opacity: 0.7; }
+.track-card.visible {
+  animation: cardAppear 0.6s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+@keyframes cardAppear {
+  from { opacity:0; transform:translateY(30px) scale(0.96); }
+  to   { opacity:1; transform:translateY(0) scale(1); }
+}
+.track-card:hover { border-color: #2a6aaa; transform: translateY(-6px); box-shadow: 0 0 30px rgba(30,90,180,0.3); }
+.track-card:hover .cover-glow { opacity: 0.8; }
+.track-card:hover .cover-wrap img { transform: scale(1.06); }
 
 .cover-wrap {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 1;
-  overflow: hidden;
-  background: #020d1a;
+  position: relative; width: 100%; aspect-ratio: 1;
+  overflow: hidden; background: #020d1a;
 }
-.cover-wrap img {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-  transition: transform 0.4s;
-}
-.track-card:hover .cover-wrap img { transform: scale(1.05); }
+.cover-wrap img { width:100%; height:100%; object-fit:cover; display:block; transition:transform 0.5s; }
 .cover-glow {
-  position: absolute; inset: 0;
-  background: radial-gradient(circle at center, rgba(30,90,180,0.3), transparent 70%);
-  opacity: 0.4;
-  transition: opacity 0.3s;
-  pointer-events: none;
+  position:absolute; inset:0;
+  background: radial-gradient(circle at center, rgba(30,90,180,0.35), transparent 70%);
+  opacity:0.4; transition:opacity 0.3s; pointer-events:none;
 }
 .cover-placeholder {
-  width: 100%; height: 100%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 48px;
-  color: #1e3a5f;
+  width:100%; height:100%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:48px; color:#1e3a5f;
 }
-
 .card-info { padding: 14px 16px; }
 .card-title {
-  font-size: 12px;
-  letter-spacing: 2px;
-  color: #cce0ff;
-  margin-bottom: 6px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  font-size: 12px; letter-spacing: 2px; color: #cce0ff;
+  margin-bottom: 6px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
 }
 .card-date { font-size: 9px; letter-spacing: 2px; color: #1e5a8a; }
-
-.empty-state {
-  position: relative; z-index: 2;
-  text-align: center;
-  padding: 80px 20px;
-  color: #1e3a5f;
-  font-size: 13px;
-  letter-spacing: 3px;
-}
-
-canvas#bgCanvas {
-  position: fixed; top:0; left:0;
-  width:100%; height:100%;
-  pointer-events: none;
-  z-index: 1;
-}
+.empty-state { position:relative; z-index:2; text-align:center; padding:80px 20px; color:#1e3a5f; font-size:13px; letter-spacing:3px; }
 </style>
 </head>
 <body>
 
 <canvas id="bgCanvas"></canvas>
 <div class="stars" id="stars"></div>
-<div class="cosmic-fog"></div>
+<div class="nebula"></div>
 
 <header>
-  <h1 class="site-title">5TARCRY</h1>
+  <h1 class="site-title glitch" data-text="5TARCRY">5TARCRY</h1>
   <p class="site-sub">DISCOGRAPHY</p>
 </header>
 
 <div class="tracks-grid" id="tracksGrid"></div>
 
 <script>
-// ── CONFIG ──
-const GH_REPO   = 'belkajpgg/belkajpgg.github.io';
+const GH_REPO = 'belkajpgg/belkajpgg.github.io';
 const GH_BRANCH = 'main';
 
-// Звёзды
+// ── ЗВЁЗДЫ ──
 const starsEl = document.getElementById('stars');
-for(let i = 0; i < 120; i++){
-  const s = document.createElement('div');
-  s.className = 'star';
-  s.style.top = Math.random()*100+'%';
-  s.style.left = Math.random()*100+'%';
-  s.style.animationDuration = (Math.random()*3+2)+'s';
-  s.style.animationDelay = (Math.random()*3)+'s';
+for(let i=0;i<150;i++){
+  const s=document.createElement('div'); s.className='star';
+  s.style.top=Math.random()*100+'%'; s.style.left=Math.random()*100+'%';
+  s.style.animationDuration=(Math.random()*4+2)+'s';
+  s.style.animationDelay=(Math.random()*4)+'s';
+  s.style.width = s.style.height = (Math.random()<0.2?'3px':'2px');
   starsEl.appendChild(s);
 }
 
-// Mouse trail
+// ── CANVAS: MOUSE TRAIL + METEORS ──
 const canvas = document.getElementById('bgCanvas');
 const ctx = canvas.getContext('2d');
 canvas.width = window.innerWidth; canvas.height = window.innerHeight;
 window.addEventListener('resize', ()=>{ canvas.width=window.innerWidth; canvas.height=window.innerHeight; });
-const particles = [];
+
+const trail = [];
 document.addEventListener('mousemove', e=>{
-  for(let i=0;i<3;i++) particles.push({x:e.clientX,y:e.clientY,size:Math.random()*2+0.5,opacity:0.5,vx:(Math.random()-0.5)*2,vy:(Math.random()-0.5)*2});
+  for(let i=0;i<3;i++) trail.push({x:e.clientX,y:e.clientY,size:Math.random()*2+0.5,opacity:0.5,vx:(Math.random()-0.5)*2,vy:(Math.random()-0.5)*2});
 });
+
+// Метеориты
+const meteors = [];
+function spawnMeteor(){
+  const x = Math.random() * canvas.width;
+  meteors.push({
+    x, y: -10,
+    vx: 2 + Math.random()*3,
+    vy: 4 + Math.random()*5,
+    len: 80 + Math.random()*120,
+    opacity: 0.8 + Math.random()*0.2,
+    width: 0.5 + Math.random()*1.5,
+    life: 1
+  });
+}
+setInterval(spawnMeteor, 1800 + Math.random()*2000);
+
 (function animBg(){
   ctx.clearRect(0,0,canvas.width,canvas.height);
-  for(let i=particles.length-1;i>=0;i--){
-    const p=particles[i];
+
+  // Mouse trail
+  for(let i=trail.length-1;i>=0;i--){
+    const p=trail[i];
     p.x+=p.vx; p.y+=p.vy; p.opacity-=0.015; p.size*=0.97;
-    if(p.opacity<=0){particles.splice(i,1);continue;}
+    if(p.opacity<=0){trail.splice(i,1);continue;}
     ctx.fillStyle=`rgba(102,179,255,${p.opacity})`;
     ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
   }
+
+  // Meteors
+  for(let i=meteors.length-1;i>=0;i--){
+    const m=meteors[i];
+    m.x+=m.vx; m.y+=m.vy; m.life-=0.012;
+    if(m.life<=0||m.y>canvas.height+50){meteors.splice(i,1);continue;}
+    const alpha = m.opacity * m.life;
+    const grad = ctx.createLinearGradient(m.x,m.y,m.x-m.vx/m.vy*m.len,m.y-m.len);
+    grad.addColorStop(0, `rgba(200,230,255,${alpha})`);
+    grad.addColorStop(0.3, `rgba(100,179,255,${alpha*0.6})`);
+    grad.addColorStop(1, `rgba(30,90,180,0)`);
+    ctx.strokeStyle = grad;
+    ctx.lineWidth = m.width;
+    ctx.beginPath();
+    ctx.moveTo(m.x, m.y);
+    ctx.lineTo(m.x - m.vx/m.vy*m.len, m.y - m.len);
+    ctx.stroke();
+    // Яркая точка головы
+    ctx.fillStyle=`rgba(220,240,255,${alpha})`;
+    ctx.beginPath(); ctx.arc(m.x,m.y,m.width,0,Math.PI*2); ctx.fill();
+  }
+
   requestAnimationFrame(animBg);
 })();
 
-// Рендер треков
+// ── РЕНДЕР КАРТОЧЕК ──
 const grid = document.getElementById('tracksGrid');
 
 function renderTracks(TRACKS){
@@ -183,7 +245,6 @@ function renderTracks(TRACKS){
       const a = document.createElement('a');
       a.className = 'track-card';
       a.href = `track.html?id=${track.id}`;
-      a.style.animationDelay = (i * 0.08) + 's';
       a.innerHTML = `
         <div class="cover-wrap">
           ${track.cover
@@ -193,31 +254,30 @@ function renderTracks(TRACKS){
         </div>
         <div class="card-info">
           <div class="card-title">${track.title}</div>
-          <div class="card-date">${track.date || ''}</div>
+          <div class="card-date">${track.date||''}</div>
         </div>`;
       grid.appendChild(a);
+      // Плавное появление с задержкой
+      setTimeout(()=>{ a.classList.add('visible'); }, 100 + i*120);
     });
   } else {
     grid.innerHTML = `<div class="empty-state">NO TRACKS YET</div>`;
   }
 }
 
-
 fetch(`https://api.github.com/repos/${GH_REPO}/contents/tracks.js?ref=${GH_BRANCH}`, {
   headers: { Accept: 'application/vnd.github+json' }
 })
-.then(r => r.json())
-.then(data => {
-  const code = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
-  const match = code.match(/const TRACKS\s*=\s*(\[[\s\S]*?\]);/);
-  const tracks = match ? JSON.parse(match[1]) : [];
-  renderTracks(tracks);
+.then(r=>r.json())
+.then(data=>{
+  const code=decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+  const match=code.match(/const TRACKS\s*=\s*(\[[\s\S]*?\]);/);
+  renderTracks(match ? JSON.parse(match[1]) : []);
 })
-.catch(() => {
-
-  const s = document.createElement('script');
-  s.src = 'tracks.js';
-  s.onload = () => renderTracks(typeof TRACKS !== 'undefined' ? TRACKS : []);
+.catch(()=>{
+  const s=document.createElement('script');
+  s.src='tracks.js';
+  s.onload=()=>renderTracks(typeof TRACKS!=='undefined'?TRACKS:[]);
   document.body.appendChild(s);
 });
 </script>
