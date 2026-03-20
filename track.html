@@ -268,27 +268,30 @@ document.addEventListener('mousemove',e=>{
 
 // Аудио фон
 if(track && track.audio){
-  document.body.addEventListener('click', function startAudioOnce(){
-    document.body.removeEventListener('click', startAudioOnce);
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const audioElement = new Audio(track.audio);
-    audioElement.crossOrigin = 'anonymous';
-    audioElement.loop = true;
-    const source = audioCtx.createMediaElementSource(audioElement);
-    const convolver = audioCtx.createConvolver();
+  let audioCtx, source, gainNode, convolver, filter, audioElement;
+  document.body.addEventListener('click', startAudioOnce, {once:true});
+  function startAudioOnce(){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    audioElement = new Audio(track.audio);
+    audioElement.volume = 0.25;
+    source = audioCtx.createMediaElementSource(audioElement);
+    convolver = audioCtx.createConvolver();
     const irBuffer = audioCtx.createBuffer(2, audioCtx.sampleRate*0.3, audioCtx.sampleRate);
-    for(let ch=0; ch<irBuffer.numberOfChannels; ch++){
-      const d = irBuffer.getChannelData(ch);
-      for(let i=0;i<irBuffer.length;i++) d[i]=(Math.random()*2-1)*0.2;
+    for(let channel=0; channel<irBuffer.numberOfChannels; channel++){
+      const nowBuffering = irBuffer.getChannelData(channel);
+      for(let i=0;i<irBuffer.length;i++){ nowBuffering[i] = (Math.random()*2-1)*0.2; }
     }
     convolver.buffer = irBuffer;
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass'; filter.frequency.value = 1200; filter.Q.value = 1;
-    const gainNode = audioCtx.createGain();
+    filter = audioCtx.createBiquadFilter();
+    filter.type = "lowpass";
+    filter.frequency.value = 1200;
+    filter.Q.value = 1;
+    gainNode = audioCtx.createGain();
     gainNode.gain.value = 0.25;
-    source.connect(convolver); convolver.connect(filter); filter.connect(gainNode); gainNode.connect(audioCtx.destination);
-    source.connect(filter); filter.connect(gainNode);
-    audioElement.play().catch(()=>{});
+    source.connect(convolver).connect(filter).connect(gainNode).connect(audioCtx.destination);
+    source.connect(filter).connect(gainNode).connect(audioCtx.destination);
+    audioElement.play();
+    setInterval(()=>{ if(audioElement.currentTime >= 21 || audioElement.currentTime < 7) audioElement.currentTime = 7; },50);
     // Пульс частиц в такт BPM
     const bpm = 135;
     setInterval(()=>{
@@ -297,7 +300,7 @@ if(track && track.audio){
       const coverImg = document.querySelector('.cover');
       if(coverImg) coverImg.style.transform=`scale(${1+g*0.02})`;
     }, 60000/bpm/2);
-  }, {once: true});
+  }
 }
 
 const listenBtn=document.getElementById('listenBtn');
