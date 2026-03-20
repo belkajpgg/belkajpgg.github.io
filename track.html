@@ -266,7 +266,39 @@ document.addEventListener('mousemove',e=>{
   requestAnimationFrame(animCanvas);
 })();
 
-// Listen Now панель
+// Аудио фон
+if(track.audio){
+  document.body.addEventListener('click', function startAudio(){
+    document.body.removeEventListener('click', startAudio);
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const audioEl = new Audio(track.audio);
+    audioEl.crossOrigin = 'anonymous';
+    const source = audioCtx.createMediaElementSource(audioEl);
+    const gainNode = audioCtx.createGain();
+    gainNode.gain.value = 0.25;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass';
+    filter.frequency.value = 1200;
+    source.connect(filter);
+    filter.connect(gainNode);
+    gainNode.connect(audioCtx.destination);
+    audioEl.play();
+    // Луп нужного отрезка
+    audioEl.addEventListener('timeupdate', ()=>{
+      if(audioEl.currentTime >= 21 || audioEl.currentTime < 7) audioEl.currentTime = 7;
+    });
+    // Пульс частиц в такт BPM 135
+    const bpm = 135;
+    setInterval(()=>{
+      const g = 0.25 + Math.random()*0.15;
+      particles.forEach(p=>{ p.style.opacity=g; p.style.filter=`drop-shadow(0 0 ${5+g*8}px #66b3ff)`; });
+      const coverImg = document.querySelector('.cover');
+      if(coverImg) coverImg.style.transform = `scale(${1+g*0.02})`;
+    }, 60000/bpm/2);
+  }, {once: false});
+}
+
+
 const listenBtn=document.getElementById('listenBtn');
 const listenPanel=document.getElementById('listenPanel');
 listenBtn.addEventListener('click',e=>{
