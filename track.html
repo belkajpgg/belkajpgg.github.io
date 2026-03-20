@@ -207,7 +207,7 @@ if(!track){
       panel.appendChild(a);
     });
   }
-} // end initTrack
+}; // end initTrack
 
 // Грузим треки через GitHub API (без кеша)
 fetch(`https://api.github.com/repos/${GH_REPO}/contents/tracks.js?ref=${GH_BRANCH}`, {
