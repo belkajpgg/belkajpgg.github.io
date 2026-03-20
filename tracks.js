@@ -2,7 +2,7 @@ const TRACKS = [
   {
     "id": "daaa",
     "title": "daaa",
-    "date": "",
+    "date": "10.02.2226",
     "cover": "covers/daaa.jpg",
     "audio": "audio/daaa.mp3",
     "links": {
