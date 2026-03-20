@@ -267,37 +267,38 @@ document.addEventListener('mousemove',e=>{
 })();
 
 // Аудио фон
-if(track.audio){
-  document.body.addEventListener('click', function startAudio(){
-    document.body.removeEventListener('click', startAudio);
+if(track && track.audio){
+  document.body.addEventListener('click', function startAudioOnce(){
+    document.body.removeEventListener('click', startAudioOnce);
     const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    const audioEl = new Audio(track.audio);
-    audioEl.crossOrigin = 'anonymous';
-    const source = audioCtx.createMediaElementSource(audioEl);
+    const audioElement = new Audio(track.audio);
+    audioElement.crossOrigin = 'anonymous';
+    audioElement.loop = true;
+    const source = audioCtx.createMediaElementSource(audioElement);
+    const convolver = audioCtx.createConvolver();
+    const irBuffer = audioCtx.createBuffer(2, audioCtx.sampleRate*0.3, audioCtx.sampleRate);
+    for(let ch=0; ch<irBuffer.numberOfChannels; ch++){
+      const d = irBuffer.getChannelData(ch);
+      for(let i=0;i<irBuffer.length;i++) d[i]=(Math.random()*2-1)*0.2;
+    }
+    convolver.buffer = irBuffer;
+    const filter = audioCtx.createBiquadFilter();
+    filter.type = 'lowpass'; filter.frequency.value = 1200; filter.Q.value = 1;
     const gainNode = audioCtx.createGain();
     gainNode.gain.value = 0.25;
-    const filter = audioCtx.createBiquadFilter();
-    filter.type = 'lowpass';
-    filter.frequency.value = 1200;
-    source.connect(filter);
-    filter.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
-    audioEl.play();
-    // Луп нужного отрезка
-    audioEl.addEventListener('timeupdate', ()=>{
-      if(audioEl.currentTime >= 21 || audioEl.currentTime < 7) audioEl.currentTime = 7;
-    });
-    // Пульс частиц в такт BPM 135
+    source.connect(convolver); convolver.connect(filter); filter.connect(gainNode); gainNode.connect(audioCtx.destination);
+    source.connect(filter); filter.connect(gainNode);
+    audioElement.play().catch(()=>{});
+    // Пульс частиц в такт BPM
     const bpm = 135;
     setInterval(()=>{
-      const g = 0.25 + Math.random()*0.15;
+      const g = 0.25+Math.random()*0.15;
       particles.forEach(p=>{ p.style.opacity=g; p.style.filter=`drop-shadow(0 0 ${5+g*8}px #66b3ff)`; });
       const coverImg = document.querySelector('.cover');
-      if(coverImg) coverImg.style.transform = `scale(${1+g*0.02})`;
+      if(coverImg) coverImg.style.transform=`scale(${1+g*0.02})`;
     }, 60000/bpm/2);
-  }, {once: false});
+  }, {once: true});
 }
-
 
 const listenBtn=document.getElementById('listenBtn');
 const listenPanel=document.getElementById('listenPanel');
