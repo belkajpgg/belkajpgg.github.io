@@ -138,12 +138,15 @@ canvas#mouseCanvas { position:fixed; top:0; left:0; width:100%; height:100%; poi
 
 <div id="listenPanel"></div>
 
-<script src="tracks.js"></script>
 <script>
-// Получаем ID из URL
+const GH_REPO   = 'belkajpgg/belkajpgg.github.io';
+const GH_BRANCH = 'main';
+
 const params = new URLSearchParams(window.location.search);
 const trackId = params.get('id');
-const track = (typeof TRACKS !== 'undefined') ? TRACKS.find(t => t.id === trackId) : null;
+
+function initTrack(TRACKS){
+  const track = TRACKS ? TRACKS.find(t => t.id === trackId) : null;
 
 if(!track){
   document.getElementById('title').textContent = 'NOT FOUND';
@@ -204,7 +207,20 @@ if(!track){
       panel.appendChild(a);
     });
   }
-}
+} // end initTrack
+
+// Грузим треки через GitHub API (без кеша)
+fetch(`https://api.github.com/repos/${GH_REPO}/contents/tracks.js?ref=${GH_BRANCH}`, {
+  headers: { Accept: 'application/vnd.github+json' }
+})
+.then(r => r.json())
+.then(data => {
+  const code = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+  const match = code.match(/const TRACKS\s*=\s*(\[[\s\S]*?\]);/);
+  const tracks = match ? JSON.parse(match[1]) : [];
+  initTrack(tracks);
+})
+.catch(() => initTrack([]));
 
 // Звёзды
 const starsEl = document.getElementById('stars');

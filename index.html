@@ -136,8 +136,11 @@ canvas#bgCanvas {
 
 <div class="tracks-grid" id="tracksGrid"></div>
 
-<script src="tracks.js"></script>
 <script>
+// ── CONFIG ──
+const GH_REPO   = 'belkajpgg/belkajpgg.github.io';
+const GH_BRANCH = 'main';
+
 // Звёзды
 const starsEl = document.getElementById('stars');
 for(let i = 0; i < 120; i++){
@@ -173,28 +176,50 @@ document.addEventListener('mousemove', e=>{
 
 // Рендер треков
 const grid = document.getElementById('tracksGrid');
-if(typeof TRACKS !== 'undefined' && TRACKS.length > 0){
-  TRACKS.forEach((track, i) => {
-    const a = document.createElement('a');
-    a.className = 'track-card';
-    a.href = `track.html?id=${track.id}`;
-    a.style.animationDelay = (i * 0.08) + 's';
-    a.innerHTML = `
-      <div class="cover-wrap">
-        ${track.cover
-          ? `<img src="${track.cover}" alt="${track.title}" loading="lazy">`
-          : `<div class="cover-placeholder">◈</div>`}
-        <div class="cover-glow"></div>
-      </div>
-      <div class="card-info">
-        <div class="card-title">${track.title}</div>
-        <div class="card-date">${track.date || ''}</div>
-      </div>`;
-    grid.appendChild(a);
-  });
-} else {
-  grid.innerHTML = `<div class="empty-state">NO TRACKS YET</div>`;
+
+function renderTracks(TRACKS){
+  if(TRACKS && TRACKS.length > 0){
+    TRACKS.forEach((track, i) => {
+      const a = document.createElement('a');
+      a.className = 'track-card';
+      a.href = `track.html?id=${track.id}`;
+      a.style.animationDelay = (i * 0.08) + 's';
+      a.innerHTML = `
+        <div class="cover-wrap">
+          ${track.cover
+            ? `<img src="${track.cover}" alt="${track.title}" loading="lazy">`
+            : `<div class="cover-placeholder">◈</div>`}
+          <div class="cover-glow"></div>
+        </div>
+        <div class="card-info">
+          <div class="card-title">${track.title}</div>
+          <div class="card-date">${track.date || ''}</div>
+        </div>`;
+      grid.appendChild(a);
+    });
+  } else {
+    grid.innerHTML = `<div class="empty-state">NO TRACKS YET</div>`;
+  }
 }
+
+// Грузим tracks.js напрямую с GitHub API (без кеша)
+fetch(`https://api.github.com/repos/${GH_REPO}/contents/tracks.js?ref=${GH_BRANCH}`, {
+  headers: { Accept: 'application/vnd.github+json' }
+})
+.then(r => r.json())
+.then(data => {
+  const code = decodeURIComponent(escape(atob(data.content.replace(/\n/g,''))));
+  const match = code.match(/const TRACKS\s*=\s*(\[[\s\S]*?\]);/);
+  const tracks = match ? JSON.parse(match[1]) : [];
+  renderTracks(tracks);
+})
+.catch(() => {
+  // fallback на локальный файл
+  const s = document.createElement('script');
+  s.src = 'tracks.js';
+  s.onload = () => renderTracks(typeof TRACKS !== 'undefined' ? TRACKS : []);
+  document.body.appendChild(s);
+});
 </script>
 </body>
 </html>
